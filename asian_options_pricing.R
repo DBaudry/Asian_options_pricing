@@ -158,7 +158,7 @@ Price_Torus$Var_QMC
 Price_Torus$time
 IC_Torus=quantile(Price_Torus$Vec,c(alpha/2,1-alpha/2))
 
-plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Monte Carlo, Antithétique, Variable de controle')
+plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main='Quasi Monte Carlo speed')
 lines(cumsum(Price_Sobol$Vec)/(1:n),type='l',col='blue')
 lines(cumsum(Price_Halton$Vec)/(1:n),type='l',col='green')
 lines(cumsum(Price_Torus$Vec)/(1:n),type='l',col='black')
@@ -166,14 +166,11 @@ lines(cumsum(Price_Torus$Vec)/(1:n),type='l',col='black')
 #### Speed of convergence ####
 
 #plot speed convergence of the three methods (antithetic, control, qmc)
-plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Monte Carlo, Antithétique, Variable de controle')
+plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Monte Carlo, Antithetic, Control')
 lines(cumsum(Anti_price_test$Vect)/(1:n),type='l',col='blue')
 lines(cumsum(price_control_test$Vec)/(1:n),type='l',col='green')
 #legend("bottomright",legend=c(" Prix Monte","Prix Antithétique ","Prix controle"),col=c("red","blue","green"),pch=15)
 
-plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Variable de controle',xlim=c(0,2000))
-lines(cumsum(quantile(price_control_test$Vec,c(alpha/2)))/(1:n),type='l',col='blue')
-lines(cumsum(quantile(price_control_test$Vec,c(1-alpha/2)))/(1:n),type='l',col='green')
 
 ##### Multi-level Monte-Carlo ####
 
