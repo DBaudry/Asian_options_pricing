@@ -1,8 +1,8 @@
 library(randtoolbox)
 library(mlmc)
+
 ##################Parameters####################
-################################################
-# Parameters
+
 r=0.05 #interest rate
 mu=0.05 #drift
 sigma=0.25 #vol
@@ -15,19 +15,20 @@ alpha=0.05 #for confidence interval
 M=2
 epsilon = 0.001
 
-u=rnorm(n*k) #we generate n*k random normal distributions
-
-######### Question 1 ########
+u=rnorm(n*k) #we generate n*k random normal distribution
 
 
-#price of the underlying in Black-Scholes model
+#### Price of the underlying in Black-Scholes model ####
+
 Underlying_BS=function(mu,sigma,t,x,S0){
   u_bs=S0*exp((mu-1/2*sigma^2)*t+sigma*sqrt(t)*x);
   return (u_bs)
 }
 
 Underlying_BS(mu,sigma,T,x[1,2],S0)
-#monte-carlo method
+
+#### Standard Monte Carlo ####
+
 price_mc=function(mu,r,T,K,k,sigma,S0,n,u){
   t0=Sys.time()
   x=matrix(u,ncol=n,nrow=k)
@@ -41,12 +42,21 @@ price_mc=function(mu,r,T,K,k,sigma,S0,n,u){
   t1=Sys.time()
   return(list(PriceMonte=expected_MC, VarianceMC=Variance_MC,Simulationvector=(S_asiat-K)*(S_asiat>=K)*exp(-r*T),time=t1-t0))
 }
+
 price_mc_test<-price_mc(mu,r,T,K,k,sigma,S0,n,u)
 price_mc_test$PriceMonte
 price_mc_test$VarianceMC
 price_mc_test$time
 IC_mc=quantile(price_mc_test$Simulationvector,c(alpha/2,1-alpha/2)) #confidence interval
-#antithetic method
+
+#The variance in the pricing is too high to use the simple Monte Carlo estimator in financial models
+
+###### Variance reduction methods ######
+
+#### Antithetic method ####  
+
+# using the fact that if W is a brownian motion, -W too
+
 Anti_price=function(mu,r,T,K,k,sigma,S0,n,u){
   t0=Sys.time()
   x=matrix(u,ncol=n,nrow=k)
@@ -71,9 +81,15 @@ Anti_price_test=Anti_price(mu,r,T,K,k,sigma,S0,n,u)
 Anti_price_test$Variance_Anti
 Anti_price_test$AntiPrice
 Anti_price_test$time
-IC_anti=quantile(Anti_price_test$Vect,c(alpha/2,1-alpha/2)) #confidence interval
+IC_anti=quantile(Anti_price_test$Vect,c(alpha/2,1-alpha/2)) 
 
-#control method
+
+#### Control variable method ####
+
+# Using a control variable Y correlated with the original
+# Monte Carlo estimators of X + c*(Y-E(Y))
+# We choose the geometric mean as control variate (suggestion from)
+
 price_control=function(r,mu,k,T,K,S0,sigma,n,u){
   t0=Sys.time()
   x=matrix(u,ncol=n,nrow=k)
@@ -98,16 +114,6 @@ price_control_test$R_squared
 price_control_test$Variance_control
 price_control_test$time
 IC_control=quantile(price_control_test$Vec,c(alpha/2,1-alpha/2)) #confidence interval
-
-#plot speed convergence of the three methods (antithetic, control, qmc)
-plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Monte Carlo, Antithétique, Variable de controle')
-lines(cumsum(Anti_price_test$Vect)/(1:n),type='l',col='blue')
-lines(cumsum(price_control_test$Vec)/(1:n),type='l',col='green')
-#legend("bottomright",legend=c(" Prix Monte","Prix Antithétique ","Prix controle"),col=c("red","blue","green"),pch=15)
-
-plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Variable de controle',xlim=c(0,2000))
-lines(cumsum(quantile(price_control_test$Vec,c(alpha/2)))/(1:n),type='l',col='blue')
-lines(cumsum(quantile(price_control_test$Vec,c(1-alpha/2)))/(1:n),type='l',col='green')
 
 
 ####Quasi monte carlo #####
@@ -157,6 +163,18 @@ lines(cumsum(Price_Sobol$Vec)/(1:n),type='l',col='blue')
 lines(cumsum(Price_Halton$Vec)/(1:n),type='l',col='green')
 lines(cumsum(Price_Torus$Vec)/(1:n),type='l',col='black')
 
+#### Speed of convergence ####
+
+#plot speed convergence of the three methods (antithetic, control, qmc)
+plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Monte Carlo, Antithétique, Variable de controle')
+lines(cumsum(Anti_price_test$Vect)/(1:n),type='l',col='blue')
+lines(cumsum(price_control_test$Vec)/(1:n),type='l',col='green')
+#legend("bottomright",legend=c(" Prix Monte","Prix Antithétique ","Prix controle"),col=c("red","blue","green"),pch=15)
+
+plot(cumsum(price_mc_test$Simulationvector)/(1:n),type='l',col='red',xlab='Nombre de Simulations',ylab='Prix',main=' Variable de controle',xlim=c(0,2000))
+lines(cumsum(quantile(price_control_test$Vec,c(alpha/2)))/(1:n),type='l',col='blue')
+lines(cumsum(quantile(price_control_test$Vec,c(1-alpha/2)))/(1:n),type='l',col='green')
+
 ##### Multi-level Monte-Carlo ####
 
 mlmc_level=function(l,N,mu,r,T,K,sigma,S0,M){
@@ -171,6 +189,9 @@ mlmc_level=function(l,N,mu,r,T,K,sigma,S0,M){
 }
 
 mlmc(2, 10, 1000, 0.01, mlmc_level, gamma = 1,mu=mu,r=r,T=T,K=K,sigma=sigma,S0=S0,M=4)
+
+###### Try to implement Multi level monte Carlo method from Giles paper (Oxford, 2006)
+## Have to be improved
 
 #### Manual Multi_level ####
 
